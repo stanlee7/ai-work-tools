@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>릴스, 쇼츠 커버 메이커</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <style>
+    :root { color-scheme: light; --ink:#172020; --paper:#faf9f6; --blue:#254ef0; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Pretendard, sans-serif; }
+    main { width:min(1080px,100%); margin:auto; padding:28px 20px 18px; }
+    h1 { margin:0 0 6px; font-size:24px; }
+    .intro { margin:0 0 22px; color:#626b68; font-size:14px; }
+    .workspace { display:grid; grid-template-columns:minmax(270px, .9fr) minmax(300px,1.1fr); gap:28px; align-items:start; }
+    .controls { display:grid; gap:15px; }
+    label, legend { font-weight:650; font-size:14px; }
+    input[type="text"], input[type="file"], select { display:block; width:100%; margin-top:7px; }
+    input[type="text"], select { border:1px solid #cbd0cc; border-radius:9px; padding:11px 12px; background:#fff; color:var(--ink); font:inherit; }
+    input[type="file"] { font:13px inherit; }
+    fieldset { border:0; padding:0; margin:0; }
+    .radio-row, .swatches, .range-head { display:flex; gap:10px; align-items:center; }
+    .radio-row { margin-top:8px; }
+    .radio-row label { flex:1; border:1px solid #cbd0cc; border-radius:9px; padding:10px; background:white; font-weight:500; }
+    .swatches { margin-top:8px; flex-wrap:wrap; }
+    .swatch { width:34px; height:34px; border:2px solid white; outline:1px solid #9da5a1; border-radius:50%; cursor:pointer; }
+    .swatch[aria-pressed="true"] { outline:3px solid var(--ink); }
+    input[type="color"] { width:40px; height:36px; padding:2px; border:1px solid #cbd0cc; border-radius:7px; background:white; }
+    .range { display:grid; gap:5px; }
+    .range-head { justify-content:space-between; }
+    input[type="range"] { width:100%; accent-color:var(--blue); }
+    .preview-col { width:min(100%,390px); justify-self:center; }
+    .preview-title { display:flex; justify-content:space-between; align-items:center; margin:0 0 8px; font-size:13px; }
+    .preview-frame { position:relative; width:100%; aspect-ratio:9/16; overflow:hidden; background:#e7e9e6; border-radius:12px; box-shadow:0 8px 24px #1720201a; }
+    canvas { display:block; width:100%; height:100%; }
+    .veil { display:none; pointer-events:none; position:absolute; inset:0; }
+    .veil::before,.veil::after { content:""; position:absolute; left:0; right:0; height:12.5%; background:#343a38a8; }
+    .veil::before { top:0; } .veil::after { bottom:0; }
+    .grid-label { position:absolute; z-index:1; left:50%; top:12.5%; transform:translate(-50%,-50%); color:white; font-size:11px; }
+    .grid-toggle { display:flex; gap:7px; align-items:center; font-weight:500; }
+    .actions { display:grid; gap:8px; margin-top:12px; }
+    button.download { border:0; border-radius:9px; padding:13px; background:var(--ink); color:white; font:650 15px Pretendard,sans-serif; cursor:pointer; }
+    button.download:hover { background:#303b39; }
+    .hint { min-height:18px; margin:0; color:#626b68; font-size:12px; }
+    footer { margin-top:25px; text-align:center; color:#69716e; font-size:12px; }
+    footer a { color:inherit; }
+    @media(max-width:650px) { main { padding:20px 16px 14px; } h1 { font-size:21px; } .workspace { grid-template-columns:1fr; gap:22px; } .preview-col { grid-row:1; width:min(100%,350px); } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>릴스, 쇼츠 커버 메이커</h1>
+  <p class="intro">이미지를 넣고 문구를 적어 커버를 저장하세요.</p>
+  <div class="workspace">
+    <section class="controls" aria-label="커버 설정">
+      <label>이미지 업로드
+        <input id="imageFile" type="file" accept="image/*">
+      </label>
+      <label>훅 첫째 줄 (흰색)
+        <input id="line1" type="text" maxlength="32" placeholder="예: 반복 업무를">
+      </label>
+      <label>훅 둘째 줄 (강조색)
+        <input id="line2" type="text" maxlength="32" placeholder="예: 10분 만에 끝내기">
+      </label>
+      <label>작은 태그
+        <input id="tag" type="text" maxlength="24" placeholder="예: 업무 자동화">
+      </label>
+      <fieldset><legend>배치</legend>
+        <div class="radio-row">
+          <label><input type="radio" name="layout" value="a" checked> A: 위 문구 + 아래 이미지</label>
+          <label><input type="radio" name="layout" value="b"> B: 이미지 + 가운데 띠</label>
+        </div>
+      </fieldset>
+      <fieldset><legend>강조색</legend>
+        <div class="swatches">
+          <button class="swatch" type="button" data-color="#39ff14" aria-label="형광 초록" aria-pressed="true" style="background:#39ff14"></button>
+          <button class="swatch" type="button" data-color="#254ef0" aria-label="파랑" aria-pressed="false" style="background:#254ef0"></button>
+          <button class="swatch" type="button" data-color="#ff5a1f" aria-label="주황" aria-pressed="false" style="background:#ff5a1f"></button>
+          <label for="customColor">직접 선택</label><input id="customColor" type="color" value="#39ff14" aria-label="강조색 직접 선택">
+        </div>
+      </fieldset>
+      <div class="range"><div class="range-head"><label for="posX">가로 위치</label><output id="posXOut">50%</output></div><input id="posX" type="range" min="0" max="100" value="50"></div>
+      <div class="range"><div class="range-head"><label for="posY">세로 위치</label><output id="posYOut">50%</output></div><input id="posY" type="range" min="0" max="100" value="50"></div>
+      <div class="range"><div class="range-head"><label for="zoom">이미지 확대</label><output id="zoomOut">100%</output></div><input id="zoom" type="range" min="100" max="220" value="100"></div>
+    </section>
+    <section class="preview-col" aria-label="커버 미리보기">
+      <div class="preview-title"><strong>미리보기</strong><label class="grid-toggle"><input id="gridToggle" type="checkbox"> 그리드 미리보기</label></div>
+      <div id="previewFrame" class="preview-frame"><canvas id="canvas" width="1080" height="1920" aria-label="커버 미리보기"></canvas><div id="veil" class="veil"><span class="grid-label">안전 영역</span></div></div>
+      <div class="actions"><button class="download" id="download">1080 × 1920 PNG 저장</button><p class="hint" id="hint" aria-live="polite">이미지를 끌어다 놓아도 됩니다.</p></div>
+    </section>
+  </div>
+  <footer>만든 사람 인스타 <a href="https://www.instagram.com/stanleetamaiworklab/?utm_source=tool&amp;utm_campaign=cover-maker" target="_blank" rel="noopener">@stanleetamaiworklab</a></footer>
+</main>
+<script>
+(() => {
+  'use strict';
+  const W = 1080, H = 1920, canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+  const $ = id => document.getElementById(id);
+  let photo = null, accent = '#39ff14';
+  const hint = $('hint');
+  const layout = () => document.querySelector('input[name="layout"]:checked').value;
+  function coverImage(img, x, y, w, h) {
+    const zoom = Number($('zoom').value) / 100;
+    const scale = Math.max(w / img.width, h / img.height) * zoom;
+    const dw = img.width * scale, dh = img.height * scale;
+    const cx = (Number($('posX').value) / 100) * w, cy = (Number($('posY').value) / 100) * h;
+    const dx = Math.min(0, Math.max(w - dw, cx - dw / 2));
+    const dy = Math.min(0, Math.max(h - dh, cy - dh / 2));
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    ctx.drawImage(img, x + dx, y + dy, dw, dh); ctx.restore();
+  }
+  function fitText(text, maxWidth, startSize, minSize) {
+    let size = startSize;
+    while (size > minSize) { ctx.font = `800 ${size}px Pretendard, sans-serif`; if (ctx.measureText(text).width <= maxWidth) break; size -= 2; }
+    return size;
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const mode = layout(), l1 = $('line1').value.trim(), l2 = $('line2').value.trim(), tag = $('tag').value.trim();
+    if (mode === 'a') {
+      ctx.fillStyle = '#172020'; ctx.fillRect(0, 0, W, 680);
+      if (photo) coverImage(photo, 0, 680, W, 1240); else { ctx.fillStyle = '#dfe3df'; ctx.fillRect(0,680,W,1240); }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      if (tag) { ctx.font = '600 36px Pretendard, sans-serif'; ctx.fillStyle = '#ffffffb8'; ctx.fillText(tag, W/2, 82, 900); }
+      const s1 = l1 ? fitText(l1, 980, 120, 62) : 120;
+      const s2 = l2 ? fitText(l2, 980, 120, 62) : 120;
+      ctx.font = `800 ${s1}px Pretendard, sans-serif`; ctx.fillStyle = '#ffffff'; ctx.fillText(l1 || '첫째 줄 훅', W/2, 285, 980);
+      ctx.font = `800 ${s2}px Pretendard, sans-serif`; ctx.fillStyle = accent; ctx.fillText(l2 || '둘째 줄 훅', W/2, 445, 980);
+    } else {
+      if (photo) coverImage(photo, 0, 0, W, H); else { ctx.fillStyle = '#dfe3df'; ctx.fillRect(0,0,W,H); }
+      ctx.fillStyle = '#111111e8'; ctx.fillRect(0, 690, W, 540);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      if (tag) { ctx.font = '600 34px Pretendard, sans-serif'; ctx.fillStyle = '#ffffffb8'; ctx.fillText(tag, W/2, 765, 900); }
+      const s1 = l1 ? fitText(l1, 980, 120, 62) : 120, s2 = l2 ? fitText(l2, 980, 120, 62) : 120;
+      ctx.font = `800 ${s1}px Pretendard, sans-serif`; ctx.fillStyle = '#fff'; ctx.fillText(l1 || '첫째 줄 훅', W/2, 900, 980);
+      ctx.font = `800 ${s2}px Pretendard, sans-serif`; ctx.fillStyle = accent; ctx.fillText(l2 || '둘째 줄 훅', W/2, 1060, 980);
+    }
+  }
+  async function render() {
+    try { await document.fonts.load('800 120px Pretendard'); await document.fonts.ready; }
+    catch (_) { hint.textContent = '글꼴 연결을 확인해 주세요.'; }
+    draw();
+  }
+  function loadFile(file) {
+    if (!file || !file.type.startsWith('image/')) { hint.textContent = '이미지 파일을 선택해 주세요.'; return; }
+    const reader = new FileReader();
+    reader.onload = () => { const img = new Image(); img.onload = () => { photo = img; hint.textContent = '이미지는 이 브라우저에서만 사용됩니다.'; render(); }; img.onerror = () => { hint.textContent = '이미지를 읽지 못했습니다.'; }; img.src = reader.result; };
+    reader.readAsDataURL(file);
+  }
+  $('imageFile').addEventListener('change', e => loadFile(e.target.files[0]));
+  ['line1','line2','tag','zoom','posX','posY'].forEach(id => $(id).addEventListener('input', () => {
+    if (id === 'zoom') $('zoomOut').value = `${$('zoom').value}%`;
+    if (id === 'posX') $('posXOut').value = `${$('posX').value}%`;
+    if (id === 'posY') $('posYOut').value = `${$('posY').value}%`;
+    render();
+  }));
+  document.querySelectorAll('input[name="layout"]').forEach(el => el.addEventListener('change', render));
+  document.querySelectorAll('.swatch').forEach(button => button.addEventListener('click', () => {
+    accent = button.dataset.color; $('customColor').value = accent;
+    document.querySelectorAll('.swatch').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+    render();
+  }));
+  $('customColor').addEventListener('input', e => { accent = e.target.value; document.querySelectorAll('.swatch').forEach(b => b.setAttribute('aria-pressed','false')); render(); });
+  $('gridToggle').addEventListener('change', e => { $('veil').style.display = e.target.checked ? 'block' : 'none'; });
+  $('previewFrame').addEventListener('dragover', e => { e.preventDefault(); });
+  $('previewFrame').addEventListener('drop', e => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+  $('download').addEventListener('click', async () => {
+    await render();
+    canvas.toBlob(blob => { if (!blob) { hint.textContent = 'PNG를 만들지 못했습니다.'; return; }
+      const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = 'reels-cover-1080x1920.png'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      hint.textContent = 'PNG를 저장했습니다.';
+    }, 'image/png');
+  });
+  render();
+})();
+</script>
+</body>
+</html>
