@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf9f6">
+  <title>회의 메모 할 일 표</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root { font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172020; background: #faf9f6; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px 16px 48px; }
+    main { max-width: 920px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; font-size: clamp(25px, 6vw, 36px); letter-spacing: -.04em; }
+    .intro { margin: 0 0 24px; color: #52605e; line-height: 1.6; }
+    label { display: block; margin: 0 0 8px; font-weight: 700; }
+    textarea { display: block; width: 100%; min-height: 190px; padding: 14px; border: 1px solid #cbd0cc; border-radius: 12px; background: #fff; color: inherit; font: inherit; line-height: 1.6; resize: vertical; }
+    button { min-height: 42px; padding: 9px 14px; border: 1px solid #172020; border-radius: 9px; background: #fff; color: #172020; font: inherit; font-weight: 650; cursor: pointer; }
+    button.primary { background: #254ef0; border-color: #254ef0; color: white; }
+    button:hover { filter: brightness(.96); }
+    button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid #254ef0; outline-offset: 2px; }
+    .toolbar, .exportbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 24px; }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 26px 0 10px; }
+    h2 { margin: 0; font-size: 20px; }
+    #count { color: #52605e; font-size: 14px; }
+    .table-wrap { overflow-x: auto; border: 1px solid #d7dbd7; border-radius: 12px; background: white; }
+    table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    th, td { padding: 9px 10px; border-bottom: 1px solid #e7e9e6; text-align: left; vertical-align: top; }
+    th { background: #f1f2ef; font-size: 13px; }
+    tr:last-child td { border-bottom: 0; }
+    td input { width: 100%; min-width: 90px; padding: 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: inherit; font: inherit; }
+    td input:focus { border-color: #254ef0; background: white; outline: none; }
+    td.original input { min-width: 170px; color: #52605e; }
+    td.action { width: 66px; text-align: center; }
+    .delete { min-height: 34px; padding: 5px 9px; border-color: #d7dbd7; color: #52605e; }
+    .empty { padding: 20px; color: #68736f; text-align: center; }
+    .helper { margin: 16px 0 8px; font-weight: 650; }
+    .prompt-row { display: flex; gap: 8px; }
+    .prompt-row input { flex: 1; min-width: 0; padding: 10px; border: 1px solid #d7dbd7; border-radius: 9px; font: inherit; }
+    .note { min-height: 1.5em; color: #254ef0; font-size: 14px; }
+    footer { margin-top: 34px; padding-top: 18px; border-top: 1px solid #d7dbd7; color: #52605e; font-size: 14px; }
+    footer a { color: #254ef0; font-weight: 650; }
+    @media (max-width: 480px) { body { padding: 22px 12px 36px; } .toolbar button, .exportbar button { flex: 1 1 calc(50% - 8px); } .prompt-row { flex-direction: column; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>회의 메모에서 할 일 찾기</h1>
+  <p class="intro">메모를 붙여 넣으면 할 일, 담당, 기한을 표로 정리합니다. 결과를 확인하고 바로 고칠 수 있어요.</p>
+  <label for="notes">회의 메모</label>
+  <textarea id="notes" placeholder="예:&#10;- 민지: 제안서 초안 작성, 금요일까지&#10;- 다음 주 월요일까지 일정 확인"></textarea>
+  <div class="toolbar">
+    <button class="primary" id="extract">할 일 정리</button>
+    <button id="example">예시 넣기</button>
+    <button id="add">행 추가</button>
+  </div>
+  <div class="section-head"><h2>정리 결과</h2><span id="count">0개</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">할 일</th><th scope="col">담당</th><th scope="col">기한</th><th scope="col">원문 줄</th><th scope="col">삭제</th></tr></thead>
+      <tbody id="rows"><tr><td class="empty" colspan="5">메모를 넣고 할 일 정리를 눌러 주세요.</td></tr></tbody>
+    </table>
+  </div>
+  <div class="exportbar">
+    <button id="copyTsv">표 복사</button><button id="copyMd">Markdown 복사</button><button id="downloadCsv">CSV 내려받기</button>
+  </div>
+  <p class="helper">더 정확하게 하려면 이 표와 메모를 AI에게 주고 빠진 할 일을 물어보세요</p>
+  <div class="prompt-row"><input id="prompt" readonly aria-label="AI에게 물어볼 문장"><button id="copyPrompt">프롬프트 복사</button></div>
+  <p class="note" id="status" role="status" aria-live="polite"></p>
+  <footer><a href="https://www.instagram.com/stanleetamaiworklab/?utm_source=tool&amp;utm_campaign=todo-from-notes">@stanleetamaiworklab</a></footer>
+</main>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const notes = $('notes'), rows = $('rows'), status = $('status');
+  const exampleText = `가상 회의 메모 예시\n- 민지: 제안서 초안 작성, 금요일까지\n* 다음 주 월요일까지 일정 확인\n• @준호 고객 질문 정리해서 공유\n1. 예산표 검토하기 (서연) 10/15\n2. 회의실 예약 요청\n- 출시일은 10월 20일로 합의\n- 내일 자료 보내기`;
+  const verbs = /(?:하기|할\s*것|요청|까지|확인|공유|작성|검토|보내기|보내|정리|예약|등록|제출|완료|준비|수정|회신|문의|논의|결정|수립|만들기|제작|점검|취합|전달|업데이트|확정|계획|수집|조사|발표|교육|안내|참석|연락|확인해|공유해|작성해|검토해)/;
+  function today() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function fmt(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  function dateIn(text) {
+    const base = today(); let m;
+    if ((m = text.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/))) return `${base.getFullYear()}-${String(+m[1]).padStart(2,'0')}-${String(+m[2]).padStart(2,'0')} (${m[0]})`;
+    if ((m = text.match(/(?<!\d)(\d{1,2})\s*\/\s*(\d{1,2})(?!\d)/))) return `${base.getFullYear()}-${String(+m[1]).padStart(2,'0')}-${String(+m[2]).padStart(2,'0')} (${m[0]})`;
+    if (/내일/.test(text)) { base.setDate(base.getDate()+1); return `${fmt(base)} (내일)`; }
+    if (/모레/.test(text)) { base.setDate(base.getDate()+2); return `${fmt(base)} (모레)`; }
+    m = text.match(/(다음\s*주\s*)?(월요일|화요일|수요일|목요일|금요일|토요일|일요일)(까지)?/);
+    if (m) {
+      const days = {일요일:0,월요일:1,화요일:2,수요일:3,목요일:4,금요일:5,토요일:6};
+      let diff = (days[m[2]] - base.getDay() + 7) % 7;
+      if (m[1]) { const dow = (base.getDay() + 6) % 7, target = (days[m[2]] + 6) % 7; diff = 7 - dow + target; }
+      else if (diff === 0) diff = 7;
+      base.setDate(base.getDate()+diff); return `${fmt(base)} (${m[0].trim()})`;
+    }
+    return '';
+  }
+  function parseLine(raw) {
+    let line = raw.trim().replace(/^\s*(?:(?:[-*•▪‣])|(?:\d+[.)]))\s*/, '').trim();
+    if (!line || /^(가상 회의 메모|회의 참석|안건|결정 사항)/.test(line) || !verbs.test(line)) return null;
+    let ownerMatch = line.match(/@([\p{L}\p{N}_-]+)|(?:^|\s)([\p{L}가-힣]{2,8})\s*:/u) || line.match(/\(([\p{L}\p{N}_ -]{2,12})\)/u);
+    let owner = ownerMatch ? (ownerMatch[1] || ownerMatch[2] || '').trim() : '';
+    if (!owner && (ownerMatch = line.match(/\(([\p{L}\p{N}_ -]{2,12})\)/u))) owner = ownerMatch[1].trim();
+    let task = line.replace(/@[\p{L}\p{N}_-]+/gu, '').replace(/(?:^|\s)[\p{L}가-힣]{2,8}\s*:/u, ' ').replace(/\([\p{L}\p{N}_ -]{2,12}\)/gu, ' ').trim();
+    const due = dateIn(line);
+    if (due) task = task.replace(/\d{1,2}\s*월\s*\d{1,2}\s*일|\d{1,2}\s*\/\s*\d{1,2}|다음\s*주\s*(?:월요일|화요일|수요일|목요일|금요일|토요일|일요일)(?:까지)?|(?:월요일|화요일|수요일|목요일|금요일|토요일|일요일)(?:까지)?|내일|모레/g, ' ').replace(/[,，]?\s*(?:금요일까지|까지)\s*$/,'').replace(/\s+/g,' ').replace(/[ ,，]+$/,'').trim();
+    return { task: task || line, owner, due, original: raw.trim() };
+  }
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function render(items) {
+    rows.replaceChildren();
+    if (!items.length) { rows.innerHTML = '<tr><td class="empty" colspan="5">할 일로 판단된 줄이 없습니다. 결과를 직접 추가할 수 있어요.</td></tr>'; }
+    items.forEach(item => {
+      const tr = document.createElement('tr');
+      for (const key of ['task','owner','due','original']) {
+        const td = document.createElement('td'); if (key === 'original') td.className = 'original';
+        const input = document.createElement('input'); input.value = item[key] || ''; input.setAttribute('aria-label', ({task:'할 일',owner:'담당',due:'기한',original:'원문 줄'})[key]);
+        td.append(input); tr.append(td);
+      }
+      const td = document.createElement('td'); td.className = 'action'; const del = document.createElement('button'); del.className = 'delete'; del.textContent = '삭제'; del.setAttribute('aria-label','행 삭제'); del.addEventListener('click', () => { tr.remove(); updateCount(); }); td.append(del); tr.append(td); rows.append(tr);
+    });
+    updateCount(); updatePrompt();
+  }
+  function readRows() { return [...rows.querySelectorAll('tr')].filter(tr => tr.querySelector('input')).map(tr => [...tr.querySelectorAll('input')].map(i => i.value)); }
+  function updateCount() { $('count').textContent = `${readRows().length}개`; updatePrompt(); }
+  function updatePrompt() { const memo = notes.value.trim(); $('prompt').value = `아래 회의 메모와 정리 표를 보고 빠진 할 일을 찾아 주세요.\n\n회의 메모:\n${memo}\n\n정리 표:\n${readRows().map(r=>r.join(' | ')).join('\n')}`; }
+  $('extract').addEventListener('click', () => { const items = notes.value.split(/\r?\n/).map(parseLine).filter(Boolean); render(items); status.textContent = `${items.length}개 할 일을 정리했습니다. 내용을 확인하고 수정해 주세요.`; });
+  $('example').addEventListener('click', () => { notes.value = exampleText; $('extract').click(); });
+  $('add').addEventListener('click', () => { const items = readRows().map(r=>({task:r[0],owner:r[1],due:r[2],original:r[3]})); items.push({task:'',owner:'',due:'',original:''}); render(items); rows.querySelector('tr:last-child input').focus(); });
+  rows.addEventListener('input', updatePrompt);
+  async function copy(text, message) { try { await navigator.clipboard.writeText(text); status.textContent = message; } catch { status.textContent = '복사하지 못했습니다. 브라우저 권한을 확인해 주세요.'; } }
+  $('copyTsv').addEventListener('click', () => copy([['할 일','담당','기한','원문 줄'], ...readRows()].map(r=>r.join('\t')).join('\n'), '엑셀용 표를 복사했습니다.'));
+  $('copyMd').addEventListener('click', () => { const data=[['할 일','담당','기한','원문 줄'],...readRows()]; copy(data.map((r,i)=>`| ${r.map(v=>String(v).replace(/\|/g,'\\|').replace(/\n/g,' ')).join(' | ')} |`).join('\n').replace(/^\|[^\n]*\|\n/, m=>m+'| --- | --- | --- | --- |\n'), 'Markdown 표를 복사했습니다.'); });
+  $('downloadCsv').addEventListener('click', () => { const csv=[['할 일','담당','기한','원문 줄'],...readRows()].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n'); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'})); a.download='meeting-todos.csv'; a.click(); URL.revokeObjectURL(a.href); status.textContent='CSV 파일을 내려받았습니다.'; });
+  $('copyPrompt').addEventListener('click', () => copy($('prompt').value, 'AI에게 물어볼 프롬프트를 복사했습니다.'));
+})();
+</script>
+</body>
+</html>

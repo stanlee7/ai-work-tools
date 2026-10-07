@@ -1,0 +1,122 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fc">
+  <title>개인정보 가리기</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172020;background:#f7f8fc;font-synthesis:none;text-rendering:optimizeLegibility}
+    *{box-sizing:border-box}body{margin:0;padding:36px 16px 28px}.wrap{max-width:880px;margin:auto}.top{font-size:14px;color:#394554;margin:0 0 9px}.sub{font-size:13px;color:#657080;line-height:1.6;margin:0 0 24px}h1{font-size:28px;letter-spacing:-.04em;margin:0 0 7px}.card{background:#fff;border:1px solid #e1e5ec;border-radius:16px;padding:20px;margin:14px 0;box-shadow:0 5px 20px #15254408}label,legend{font-weight:650;font-size:14px}.label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.hint{color:#788291;font-size:12px;font-weight:400}textarea{display:block;width:100%;min-height:200px;resize:vertical;padding:14px;border:1px solid #ccd3df;border-radius:10px;font:inherit;font-size:14px;line-height:1.65;color:#172020;background:#fff}textarea:focus{outline:3px solid #254ef026;border-color:#254ef0}#result{min-height:160px;background:#fbfcfe}.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}fieldset{border:0;padding:0;margin:0 0 18px}fieldset:last-child{margin-bottom:0}legend{margin-bottom:10px}.checks{display:flex;flex-wrap:wrap;gap:10px 18px}.checks label{font-weight:450;display:flex;align-items:center;gap:7px;font-size:13px}.checks input{accent-color:#254ef0;width:16px;height:16px;margin:0}.radios{display:grid;gap:9px}.radios label{font-weight:450;display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.5}.radios input{accent-color:#254ef0;margin:2px 0 0}.actions{display:flex;flex-wrap:wrap;gap:9px}.button{border:0;border-radius:9px;background:#254ef0;color:white;padding:11px 16px;font:inherit;font-size:14px;font-weight:650;cursor:pointer}.button.secondary{background:#edf1f7;color:#243044}.button:disabled{opacity:.48;cursor:not-allowed}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #edf0f4;vertical-align:top;overflow-wrap:anywhere}th{font-size:12px;color:#647080}.warning{font-size:12px;color:#8b4a22;background:#fff6ed;border-radius:8px;padding:10px 12px;margin:0 0 12px}.empty{color:#77818e;font-size:13px;padding:12px 0}footer{text-align:center;font-size:12px;color:#77818e;padding:10px}footer a{color:#254ef0;text-decoration:none}.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media(max-width:560px){body{padding:24px 12px}.card{padding:16px;border-radius:13px}h1{font-size:24px}.options{grid-template-columns:1fr 1fr}.button{flex:1 1 auto}.label-row .button{flex:0 0 auto}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="top">AI에 붙여넣기 전에 먼저 가리세요. 입력한 글은 서버로 보내지 않습니다.</p>
+    <h1>개인정보 가리기</h1>
+    <p class="sub">형식으로 찾는 도구라 이름, 주소는 직접 확인하세요. 입력한 내용은 이 브라우저 안에서만 처리됩니다.</p>
+
+    <section class="card" aria-labelledby="input-label">
+      <div class="label-row"><label id="input-label" for="source">가릴 글</label><span class="hint">붙여넣은 뒤 가리기를 누르세요</span></div>
+      <textarea id="source" placeholder="문서나 대화 내용을 붙여넣으세요."></textarea>
+    </section>
+
+    <section class="card" aria-label="가리기 설정">
+      <fieldset><legend>찾을 항목</legend><div class="checks">
+        <label><input type="checkbox" data-kind="phone" checked> 휴대폰</label>
+        <label><input type="checkbox" data-kind="landline" checked> 일반 전화</label>
+        <label><input type="checkbox" data-kind="email" checked> 이메일</label>
+        <label><input type="checkbox" data-kind="rrn" checked> 주민등록번호 형식</label>
+        <label><input type="checkbox" data-kind="business" checked> 사업자번호 형식</label>
+        <label><input type="checkbox" data-kind="card" checked> 카드번호 형식</label>
+        <label><input type="checkbox" data-kind="account"> 계좌번호처럼 보이는 숫자열</label>
+      </div></fieldset>
+      <fieldset><legend>가리는 방식</legend><div class="radios">
+        <label><input type="radio" name="style" value="stars" checked> 전부 별표</label>
+        <label><input type="radio" name="style" value="keep"> 앞자리와 끝자리 남기기 (예: 010-****-5678)</label>
+        <label><input type="radio" name="style" value="label"> 표시어로 바꾸기 (예: [전화1], [메일1])</label>
+      </div></fieldset>
+      <div class="actions"><button class="button" id="mask">가리기</button><button class="button secondary" id="undo" disabled>되돌리기</button></div>
+    </section>
+
+    <section class="card" aria-labelledby="result-label">
+      <div class="label-row"><label id="result-label" for="result">가린 결과</label><button class="button secondary" id="copy" disabled>결과 복사</button></div>
+      <textarea id="result" readonly placeholder="가린 결과가 여기에 표시됩니다."></textarea>
+    </section>
+
+    <section class="card" aria-labelledby="matches-label">
+      <div class="label-row"><label id="matches-label">찾은 항목</label><span class="hint" id="count">0개</span></div>
+      <div id="matches" class="empty">아직 찾은 항목이 없습니다.</div>
+    </section>
+    <p class="warning">되돌리기 표에는 원래 값이 들어갑니다. CSV 파일은 내 PC에만 저장하세요.</p>
+    <div class="actions"><button class="button secondary" id="csv" disabled>되돌리기 표 .csv 내려받기</button></div>
+    <footer><a href="https://www.instagram.com/stanleetamaiworklab/?utm_source=tool&amp;utm_campaign=pii-mask-lite" target="_blank" rel="noopener noreferrer">인스타 @stanleetamaiworklab</a></footer>
+    <p id="status" class="sr" role="status" aria-live="polite"></p>
+  </main>
+  <script>
+  (()=>{
+    'use strict';
+    // 패턴은 종류별로 한곳에 모아 둡니다. 계좌는 형식 추정이 어려워 사용자가 선택합니다.
+    const PATTERNS={
+      card:/\b(?:\d{4}[- ]?){3}\d{4}\b/g,
+      rrn:/\b\d{6}-\d{7}\b/g,
+      business:/\b\d{3}-\d{2}-\d{5}\b/g,
+      email:/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
+      phone:/(?<!\d)010(?:[- ]?\d{4})[- ]?\d{4}(?!\d)/g,
+      landline:/(?<!\d)(?:02|0\d{1,2})[- ]\d{3,4}[- ]\d{4}(?!\d)/g,
+      account:/(?<!\d)\d{10,14}(?!\d)/g
+    };
+    const NAMES={card:'카드번호',rrn:'주민등록번호 형식',business:'사업자번호 형식',email:'이메일',phone:'휴대폰',landline:'일반 전화',account:'계좌번호 추정'};
+    const LABELS={card:'카드',rrn:'주민',business:'사업자',email:'메일',phone:'전화',landline:'전화',account:'계좌'};
+    const source=document.querySelector('#source'),result=document.querySelector('#result'),matches=document.querySelector('#matches');
+    const status=document.querySelector('#status');let found=[],previous='';
+    const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const enabled=()=>new Set([...document.querySelectorAll('[data-kind]:checked')].map(x=>x.dataset.kind));
+    const mode=()=>document.querySelector('[name="style"]:checked').value;
+    function maskValue(value,kind,style){
+      if(style==='label')return `[${LABELS[kind]}${found.filter(x=>x.kind===kind&&x.original===value).length+1}]`;
+      if(style==='stars')return '*'.repeat(Math.max(4,value.length));
+      if(kind==='email'){const [name,domain]=value.split('@');return `${name.slice(0,1)}${'*'.repeat(Math.max(3,name.length-1))}@${domain}`;}
+      const digits=value.replace(/\D/g,'');
+      if(digits.length<7)return '*'.repeat(value.length);
+      const head=kind==='phone'||kind==='landline'?3:2,tail=4;
+      let masked=digits.slice(0,head)+'*'.repeat(Math.max(4,digits.length-head-tail))+digits.slice(-tail);
+      let cursor=0;return value.replace(/\d/g,()=>masked[cursor++]);
+    }
+    function run(){
+      const text=source.value;found=[];const kinds=enabled();
+      // 겹치는 번호를 방지하도록 카드, 주민, 사업자, 전화 순으로 먼저 확보합니다.
+      const priority=['card','rrn','business','email','phone','landline','account'];
+      const spans=[];
+      for(const kind of priority){if(!kinds.has(kind))continue;PATTERNS[kind].lastIndex=0;let match;
+        while((match=PATTERNS[kind].exec(text))){const start=match.index,end=start+match[0].length;if(spans.some(s=>start<s.end&&end>s.start))continue;spans.push({start,end,kind,original:match[0]});if(match[0].length===0)PATTERNS[kind].lastIndex++;}
+      }
+      spans.sort((a,b)=>a.start-b.start);
+      const ids=new Map();let output='',at=0;
+      for(const item of spans){output+=text.slice(at,item.start);const key=item.kind+'\u0000'+item.original;let replacement;
+        if(mode()==='label'){if(!ids.has(key))ids.set(key,`[${LABELS[item.kind]}${[...ids.keys()].filter(k=>k.startsWith(item.kind+'\u0000')).length+1}]`);replacement=ids.get(key);}
+        else replacement=maskValue(item.original,item.kind,mode());
+        item.replacement=replacement;item.outStart=output.length;found.push(item);output+=replacement;at=item.end;
+      }
+      output+=text.slice(at);result.value=output;render();
+      document.querySelector('#undo').disabled=found.length===0;document.querySelector('#copy').disabled=found.length===0;document.querySelector('#csv').disabled=found.length===0;
+      status.textContent=`${found.length}개 항목을 찾았습니다.`;
+    }
+    function render(){
+      document.querySelector('#count').textContent=`${found.length}개`;
+      if(!found.length){matches.className='empty';matches.textContent='찾은 항목이 없습니다.';return;}
+      matches.className='table-wrap';matches.innerHTML=`<table><thead><tr><th>종류</th><th>원래 값 일부</th><th>바뀐 값</th></tr></thead><tbody>${found.map(x=>`<tr><td>${esc(NAMES[x.kind])}</td><td>${esc(x.original.length>5?x.original.slice(0,2)+'…'+x.original.slice(-2):'…')}</td><td>${esc(x.replacement)}</td></tr>`).join('')}</tbody></table>`;
+    }
+    function csvCell(v){return '"'+String(v).replace(/"/g,'""')+'"';}
+    document.querySelector('#mask').addEventListener('click',run);
+    document.querySelector('#undo').addEventListener('click',()=>{if(!found.length)return;previous=result.value;let restored=previous;for(const item of [...found].reverse())restored=restored.slice(0,item.outStart)+item.original+restored.slice(item.outStart+item.replacement.length);result.value=restored;status.textContent='결과 칸에서 원래 값으로 되돌렸습니다.';});
+    document.querySelector('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(result.value);status.textContent='가린 결과를 복사했습니다.';}catch{result.focus();result.select();status.textContent='결과를 선택했습니다. 복사해 주세요.';}});
+    document.querySelector('#csv').addEventListener('click',()=>{const rows=[['표시어 또는 바뀐 값','원래 값','종류'],...found.map(x=>[x.replacement,x.original,NAMES[x.kind]])];const blob=new Blob(['\uFEFF'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='되돌리기표.csv';a.click();URL.revokeObjectURL(url);});
+  })();
+  </script>
+</body>
+</html>
+
